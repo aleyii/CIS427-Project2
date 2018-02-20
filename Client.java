@@ -4,7 +4,7 @@
 
 import java.io.*;
 import java.net.*;
-
+//PROJECT 2 CLIENT
 public class Client 
 {
     public static final int SERVER_PORT = 5432;
