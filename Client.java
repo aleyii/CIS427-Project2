@@ -25,6 +25,7 @@ public class Client
 
 	// Try to open a socket on SERVER_PORT
 	// Try to open input and output streams
+	System.out.println("Client Connected");
 	try 
 	{
 	    clientSocket = new Socket(args[0], SERVER_PORT);
