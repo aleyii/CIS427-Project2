@@ -107,13 +107,17 @@ class SThread extends Thread
 			    		for(int i=1;i<parts.length;i++) // Begin index at 1 due to line from server beings with command itself
 			    			System.out.println(parts[i]);   		
 			    }
-			    else if(serverInput.substring(0,4).equals("QUIT")||serverInput.substring(0,4).equals("SHUT")) 	 
+			    else if(serverInput.substring(0,4).equals("QUIT")) 	 
 			    {	
 			    		String [] parts = serverInput.split("=");
 			    		for(int i=1;i<parts.length;i++) // Begin index at 1 due to line from server beings with command itself
 			    			System.out.println(parts[i]);
 			    		break;
 			    }
+			    else if(serverInput.substring(0,3).equals("SHU")) {    
+			    	
+			    }
+		    	
 			    else
 			     System.out.println(serverInput);    		
 		    }

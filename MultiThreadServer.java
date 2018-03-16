@@ -15,10 +15,12 @@ public class MultiThreadServer {
 
     public static void main(String args[]) 
     {
-    		ServerSocket myServerice = null;
+    	ServerSocket myServerice = null;
 		Socket serviceSocket = null;
 		//ChildThread cThread;
-		ChildThread.readFile(ChildThread.contacts);
+		ChildThread.readFile(ChildThread.contacts, ChildThread.contact);
+		ChildThread.readFile(ChildThread.users, ChildThread.user);
+		
 		// Try to open a server socket 
 		try {
 		    myServerice = new ServerSocket(SERVER_PORT);
