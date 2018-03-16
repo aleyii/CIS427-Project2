@@ -1,8 +1,10 @@
 /*
  * Server.java
+
  */
 
 // Current Version
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -13,9 +15,10 @@ public class MultiThreadServer {
 
     public static void main(String args[]) 
     {
-	ServerSocket myServerice = null;
+    		ServerSocket myServerice = null;
 		Socket serviceSocket = null;
-	
+		//ChildThread cThread;
+		ChildThread.readFile(ChildThread.contacts);
 		// Try to open a server socket 
 		try {
 		    myServerice = new ServerSocket(SERVER_PORT);
@@ -35,7 +38,7 @@ public class MultiThreadServer {
 				System.out.println("MultiThreadServer: new connection from " + serviceSocket.getInetAddress());
 		
 				// Create and start the client handler thread
-				ChildThread cThread = new ChildThread(serviceSocket);
+				 ChildThread cThread = new ChildThread(serviceSocket);
 				cThread.start();
 		    }   
 		    catch (IOException e) 

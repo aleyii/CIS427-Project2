@@ -1,6 +1,7 @@
 /* 
  * ChildThread.java
 
+
  */
 
 // Current Version
@@ -65,9 +66,12 @@ public class ChildThread extends Thread
 				
 				else  if (line.substring(0, 4).equals("LIST")) 
 					list (contacts); 
+				else if (line.substring(0, 3).equals("ADD")) 
+					add(line,contacts);
+				else if (line.substring(0, 6).equals("DELETE")) 
+					delete(contacts, line);
 				
-				this.out.println(line+"back to the client");
-				this.out.flush();
+				
 				// Broadcast it to everyone!  You will change this.  
 				// Most commands do not need to broadcast
 				for(int i = 0; i < handlers.size(); i++) 
@@ -143,12 +147,56 @@ public class ChildThread extends Thread
 	    ons.close();
 	}
 
-	 void delete(ArrayList<ArrayList<String>> contacts, String line,PrintStream os) {
+	 void add(String line,ArrayList<ArrayList<String>> contacts) {
+		  String[] parts = line.split(" ");
+		  if(parts.length==4) {
+			  contacts.add(new ArrayList<String>());
+			  int spot=contacts.size()-1; 
+			  int id = 0;
+			 if(contacts.size()-1==0)
+				 id=1001;
+			 else
+				 id=Integer.parseInt(contacts.get(spot-1).get(0))+1;
+			  
+			  contacts.get(spot).add(Integer.toString(id));
+			  contacts.get(spot).add(parts[1]); // ADD FNAME 
+			  contacts.get(spot).add(parts[2]); // ADD LNAME
+				
+			  if(parts[3].matches("(\\d-)?(\\d{3}-)?\\d{3}-\\d{4}")) { // check if phone follows format
+				  contacts.get(spot).add(parts[3]);  // if follows format, insert into array
+				  this.out.println("ADD=200 OK=The new Record ID is " + Integer.toString(id)); // = is key to seperate string on client side
+				  this.out.flush();
+			  }
+			  else {
+				  this.out.println("301 Message Format Error ");		
+				  this.out.flush();
+				  contacts.remove(spot);
+				}
+			}
+		  else if(parts.length<4) {
+			  this.out.println("301 Message Format Error");
+			  this.out.flush();
+		  }
+			
+		  else {
+			  this.out.println("Can not insert data, file is full");
+			  this.out.flush();
+			  
+		  }
+		} 
+
+	
+	
+	
+	
+	 void delete(ArrayList<ArrayList<String>> contacts, String line) {
 		
 		String[] parts = line.split(" "); 
 		Boolean found = false;
-		if (parts.length<2)
-			os.println("301 Message Format Error");
+		if (parts.length<2) {
+			this.out.println("301 Message Format Error");
+			this.out.flush(); 
+		}
 		else {
 			
 			for(int i=0;i<contacts.size();i++) {
