@@ -43,38 +43,49 @@ public class ChildThread extends Thread
 		{
 		    while ((line = in.readLine()) != null) 
 		    {
-				System.out.println(line);
+				//System.out.println(line);
 				
 				if(line.equals("SHUTDOWN")) {
 					for(int i = 0; i < handlers.size(); i++) 
 					{	
+						
 					    synchronized(handlers) 
 					    {
 					    		ChildThread handler =(ChildThread)handlers.elementAt(i);
 							if (handler != this) 
-							{
-								
+							{								
 							    handler.out.println(line);
+							   // System.out.println(handlers.get(i).);
 							    handler.out.flush();
-							    socket.close();
-						
+							    socket.close();						
 							}
 					    }
 					}
 					System.exit(0);
 				}
-				
-				else  if (line.substring(0, 4).equals("LIST")) 
-					list (contacts); 
 				else if (line.substring(0, 3).equals("ADD")) 
 					add(line,contacts);
+				else if (line.substring(0, 3).equals("WHO")) 
+					who(contacts);
+				else  if (line.substring(0, 4).equals("LIST")) 
+					list (contacts); 			
+				else if (line.substring(0, 4).equals("QUIT")) {
+					this.out.println(line+"=200 OK");
+					System.out.println("Client is closing " + socket.getInetAddress());
+					//socket.getRemoteSocketAddress().toString());
+					this.out.flush();
+					//socket.close();
+				}				
 				else if (line.substring(0, 6).equals("DELETE")) 
 					delete(contacts, line);
-				
+				else {
+					this.out.println("300 Invalid Command");
+					this.out.flush();
+				}
 				
 				// Broadcast it to everyone!  You will change this.  
 				// Most commands do not need to broadcast
-				for(int i = 0; i < handlers.size(); i++) 
+				/*for(int i = 0; i < handlers.size(); i++) 
 				{	
 				    synchronized(handlers) 
 				    {
@@ -86,8 +97,8 @@ public class ChildThread extends Thread
 						    handler.out.flush();
 						}
 				    }
-				}
-		    }
+				}*/
+		    }// breaks while loop
 		} 
 		catch(IOException ioe) 
 		{
@@ -113,7 +124,7 @@ public class ChildThread extends Thread
 		}
     }
        
-
+    // READ for contacts DONE
 	private static Scanner x;
 	static void readFile(ArrayList<ArrayList<String>> contacts)
 	{
@@ -146,7 +157,7 @@ public class ChildThread extends Thread
 	    }
 	    ons.close();
 	}
-
+	// ADD DONE
 	 void add(String line,ArrayList<ArrayList<String>> contacts) {
 		  String[] parts = line.split(" ");
 		  if(parts.length==4) {
@@ -184,11 +195,8 @@ public class ChildThread extends Thread
 			  
 		  }
 		} 
-
 	
-	
-	
-	
+	// DELETE DONE
 	 void delete(ArrayList<ArrayList<String>> contacts, String line) {
 		
 		String[] parts = line.split(" "); 
@@ -217,6 +225,7 @@ public class ChildThread extends Thread
 		}
 	}
 
+	// LIST
 	 void list(ArrayList<ArrayList<String>> contacts){	
 		String output="";
 		for(int i=0;i< contacts.size();i++) {
@@ -276,7 +285,18 @@ public class ChildThread extends Thread
     }
     
     
-    
+	 static void who(ArrayList<ArrayList<String>> users){	
+			String output="";
+			for(int i=0;i< handlers.size();i++) {
+				for(int j=0;j<handlers.size();j++) {			
+					output+=handlers.get(i);
+					output+="\t";
+				}
+				output+="="; // inserted to split string on client side
+			}
+			System.out.println("LIST=200 OK=The List of active users: =");
+			//System.out.println(Vector<ChildThread> handlers);
+	}
     
 }
 
