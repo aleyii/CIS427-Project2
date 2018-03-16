@@ -1,20 +1,27 @@
 /* 
  * Client.java
+
  */
+
+
+
+
+
+
+// current version
 
 import java.io.*;
 import java.net.*;
-//PROJECT 2 CLIENT
+
 public class Client 
 {
-    public static final int SERVER_PORT = 5432;
+    public static final int SERVER_PORT = 3246;
 
     public static void main(String[] args) 
     {
 	Socket clientSocket = null;  
 	PrintStream os = null;
 	String userInput = null;
-	String serverIns=null;
 	BufferedReader stdInput = null;
 
 	//Check the number of command line parameters
@@ -26,7 +33,6 @@ public class Client
 
 	// Try to open a socket on SERVER_PORT
 	// Try to open input and output streams
-	System.out.println("Client Connected");
 	try 
 	{
 	    clientSocket = new Socket(args[0], SERVER_PORT);
@@ -49,6 +55,7 @@ public class Client
 	{
 	    try 
 	    {
+	    	System.out.println("Client cnnected ");
 		//Start a child thread to handle the server's messages
 		SThread sThread = new SThread(clientSocket);
 		sThread.start();
@@ -57,8 +64,6 @@ public class Client
 		while ((userInput = stdInput.readLine())!= null)
 		{
 		    os.println(userInput);
-		    //serverIns = stdInput.readLine();
-		    //System.out.println(serverIns+"CLIENT SIDE ONLY");
 		}
 
 		// close the input and output stream
@@ -88,7 +93,7 @@ class SThread extends Thread
      */
     SThread(Socket socket)
     {
-    	this.socket = socket;
+	this.socket = socket;
     }
 
     /*
@@ -96,22 +101,21 @@ class SThread extends Thread
      */
     public void run()
     {
-		try 
-		{
-		    is = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-	
-		    while ((serverInput = is.readLine())!= null)
-		    {
-		    		System.out.println("s:" + serverInput);
-		    }
-	
-		    is.close();
-		    socket.close();   
-		    System.exit(0);
-		} 
-		catch (IOException e) 
-			{}
+	try 
+	{
+	    is = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+	    while ((serverInput = is.readLine())!= null)
+	    {
+		System.out.println("s:" + serverInput);
+	    }
+
+	    is.close();
+	    socket.close();   
+	    System.exit(0);
+	} 
+	catch (IOException e) 
+	{
+	}
     }           
 }
-
-
