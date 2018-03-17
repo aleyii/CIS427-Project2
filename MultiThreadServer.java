@@ -18,8 +18,8 @@ public class MultiThreadServer {
     	ServerSocket myServerice = null;
 		Socket serviceSocket = null;
 		//ChildThread cThread;
-		ChildThread.readFile(ChildThread.contacts, ChildThread.contact);
-		ChildThread.readFile(ChildThread.users, ChildThread.user);
+		ChildThread.readFile(ChildThread.contacts, "contacts.txt");
+		ChildThread.readFile(ChildThread.users, "users.txt");
 		
 		// Try to open a server socket 
 		try {

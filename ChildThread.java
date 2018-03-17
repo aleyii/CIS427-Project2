@@ -16,7 +16,7 @@ public class ChildThread extends Thread
     static  Vector<ChildThread> handlers = new Vector<ChildThread>(20);
     public static ArrayList<ArrayList<String>> contacts = new ArrayList<ArrayList<String>>(); // Holds Data from file
 	public static ArrayList<ArrayList<String>> users = new ArrayList<ArrayList<String>>();
-	public static String contact = "contacts.txt", user ="users.txt";
+	//public static String contact = "contacts.txt", user ="users.txt";
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
@@ -44,9 +44,7 @@ public class ChildThread extends Thread
 		try 
 		{
 		    while ((line = in.readLine()) != null) 
-		    {
-				
-				
+		    {	
 				if(line.equals("SHUTDOW")) {
 					this.out.println(line + "200 OK");
 					this.out.flush();
@@ -86,7 +84,7 @@ public class ChildThread extends Thread
 				else if(line.substring(0, 5).equals("LOGIN"))
 				{
 					isLogged =login(line,isLogged, users);
-					System.out.println(isLogged);
+					System.out.println(isLogged); //tetsing only
 				}
 					
 				else if (line.substring(0, 6).equals("DELETE")) 
@@ -251,7 +249,7 @@ public class ChildThread extends Thread
 			this.out.println("LIST=200 OK=The List of records in the book="+output);
 			this.out.flush();
 	}
-	
+	//LOGIN DONE
 	 Boolean login(String  line,Boolean isLogged,ArrayList<ArrayList<String>> users){	
 		 String[] parts = line.split(" ");
 		 int i;
