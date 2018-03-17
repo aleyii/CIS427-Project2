@@ -47,7 +47,7 @@ public class ChildThread extends Thread
 		    {
 				
 				
-				if(line.equals("SHUTDOWN")) {
+				if(line.equals("SHUTDOW")) {
 					this.out.println(line + "200 OK");
 					this.out.flush();
 					ChildThread handler;
@@ -66,7 +66,9 @@ public class ChildThread extends Thread
 					}
 					break;
 				}
-				
+				else if (line.equals("SHUTDOWN")) {
+					break;
+				}
 				else if (line.substring(0, 3).equals("ADD")) 
 					add(line,contacts,isLogged);
 				else if (line.substring(0, 3).equals("WHO")) 
@@ -120,6 +122,7 @@ public class ChildThread extends Thread
 	    		}
 		    }
 		}
+		System.exit(0);
     }
        
     // READ DONE
