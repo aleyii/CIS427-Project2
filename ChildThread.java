@@ -20,7 +20,7 @@ public class ChildThread extends Thread
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
-
+   // boolean isLogged= false;
    
     
     public ChildThread(Socket socket) throws IOException 
@@ -32,7 +32,8 @@ public class ChildThread extends Thread
 
     public void run() 
     {
-    	boolean isLogged= true;
+    	boolean isLogged= false;
+    	
 		String line;
 		synchronized(handlers) 
 		{
@@ -47,11 +48,15 @@ public class ChildThread extends Thread
 				
 				
 				if(line.equals("SHUTDOWN")) {
+					this.out.println(line + "200 OK");
+					this.out.flush();
+					ChildThread handler;
 					for(int i = 0; i < handlers.size(); i++) 
 					{	
+						
 					    synchronized(handlers) 
 					    {
-						ChildThread handler = (ChildThread)handlers.elementAt(i);
+						handler  = (ChildThread)handlers.elementAt(i);
 						if (handler != this) 
 						{
 						    handler.out.println(line + "210 the server is about to shutdown");
@@ -65,7 +70,7 @@ public class ChildThread extends Thread
 				else if (line.substring(0, 3).equals("ADD")) 
 					add(line,contacts,isLogged);
 				else if (line.substring(0, 3).equals("WHO")) 
-					who(contacts);
+					who();
 				else  if (line.substring(0, 4).equals("LIST")) 
 					list (contacts); 			
 				else if(line.substring(0, 4).equals("LOOK"))
@@ -77,7 +82,11 @@ public class ChildThread extends Thread
 					this.out.flush();				
 				}			
 				else if(line.substring(0, 5).equals("LOGIN"))
-					login(line,isLogged, users);
+				{
+					isLogged =login(line,isLogged, users);
+					System.out.println(isLogged);
+				}
+					
 				else if (line.substring(0, 6).equals("DELETE")) 
 					delete(contacts, line,isLogged);
 				else {
@@ -98,20 +107,22 @@ public class ChildThread extends Thread
 				in.close();
 				out.close();
 				socket.close();
+				
 		    } 
 		    catch(IOException ioe) 
 		    {} 
 		    finally 
 		    {
-		    		synchronized(handlers) 
-		    		{
-		    			handlers.removeElement(this);
-		    		}
+		    	
+	    		synchronized(handlers) 
+	    		{
+	    			handlers.removeElement(this);
+	    		}
 		    }
 		}
     }
        
-    // READ for contacts DONE
+    // READ DONE
 	private static Scanner x;
 	static void readFile(ArrayList<ArrayList<String>> contacts,String file)
 	{
@@ -132,15 +143,15 @@ public class ChildThread extends Thread
 		}
 		x.close();
 	}
-
+	//WRITE DONE
 	static void writeFile(ArrayList<ArrayList<String>> contacts) throws IOException {
 		PrintWriter ons = new PrintWriter("contacts.txt"); 
 	    
 	    for(int i=0;i<contacts.size();i++) {
-	    		for(int j=0;j<contacts.get(i).size();j++){
-	    			ons.write(contacts.get(i).get(j)+" ");
-	    		}
-	    		ons.write("\n");
+    		for(int j=0;j<contacts.get(i).size();j++){
+    			ons.write(contacts.get(i).get(j)+" ");
+    		}
+    		ons.write("\n");
 	    }
 	    ons.close();
 	}
@@ -189,7 +200,6 @@ public class ChildThread extends Thread
 			  }
 		  }
 		} 
-	
 	// DELETE DONE
 	 void delete(ArrayList<ArrayList<String>> contacts, String line,Boolean logged) {
 		 if(!logged)
@@ -225,7 +235,6 @@ public class ChildThread extends Thread
 		 }
 		
 	}
-
 	// LIST DONE
 	 void list(ArrayList<ArrayList<String>> contacts){	
 		String output="";
@@ -240,7 +249,7 @@ public class ChildThread extends Thread
 			this.out.flush();
 	}
 	
-	 void login(String  line,Boolean isLogged,ArrayList<ArrayList<String>> users){	
+	 Boolean login(String  line,Boolean isLogged,ArrayList<ArrayList<String>> users){	
 		 String[] parts = line.split(" ");
 		 int i;
 			for(i=0;i<users.size();i++){
@@ -248,17 +257,18 @@ public class ChildThread extends Thread
 					isLogged=true;
 					this.out.println("200 OK");
 					this.out.flush();
-					return;
+					return true;
 				}	
 			}
 			if(i==users.size())
 			{
 				this.out.println("410 Wong UserID or Password");
 				this.out.flush();
-				return;
+				return false;
 			}
+			return false;
 		}
-	 //DONE
+	 //LOOK DONE
 	 void look(String  line,ArrayList<ArrayList<String>> users){
 		 	String[] parts = line.split(" ");
 	    	int index = Integer.parseInt(parts[1]); // 
@@ -289,7 +299,7 @@ public class ChildThread extends Thread
     }
     
    
-	 static void who(ArrayList<ArrayList<String>> users){	
+	 static void who(){	
 			String output="";
 			for(int i=0;i< handlers.size();i++) {
 				for(int j=0;j<handlers.size();j++) {			
@@ -300,9 +310,5 @@ public class ChildThread extends Thread
 			}
 			System.out.println("LIST=200 OK=The List of active users: =");
 			//System.out.println(Vector<ChildThread> handlers);
-	}
-    	  
-	 
-	 
+	}	 
 }
-
