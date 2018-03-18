@@ -20,7 +20,7 @@ public class ChildThread extends Thread
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
-   
+    String userL="";
     
     public ChildThread(Socket socket) throws IOException 
     {
@@ -31,8 +31,8 @@ public class ChildThread extends Thread
 
     public void run() 
     {
-    	boolean isLogged= false;
-    	
+    		boolean isLogged= false;
+    		
 		String line;
 		synchronized(handlers) 
 		{
@@ -47,7 +47,8 @@ public class ChildThread extends Thread
 		    	 	String[] parts = line.split(" ");
 		    	 	
 				if(parts[0].equals("SHUTDOWN")) {
-					
+					System.out.println(userL);
+					if(userL.equals("root")) {
 					ChildThread handler;
 					
 					for(int i = 0; i < handlers.size();i++) 
@@ -68,6 +69,11 @@ public class ChildThread extends Thread
 					this.out.flush();
 					writeFile(contacts);
 					break;
+					}
+					else {
+						this.out.println("402 User not allowed to execute command");
+						this.out.flush();
+					}
 				}
 				else if (parts[0].equals("ADD")) 
 					add(parts,contacts,isLogged);
@@ -113,10 +119,10 @@ public class ChildThread extends Thread
 		    finally 
 		    {
 		    	
-	    		synchronized(handlers) 
-	    		{
-	    			handlers.removeElement(this);
-	    		}
+		    		synchronized(handlers) 
+		    		{
+		    			handlers.removeElement(this);
+		    		}
 		    }
 		}
 		System.exit(0);
@@ -255,6 +261,7 @@ public class ChildThread extends Thread
 			for(i=0;i<users.size();i++){
 				if(users.get(i).get(0).equals(parts[1])&&users.get(i).get(1).equals(parts[2])){
 					isLogged=true;
+					userL+=parts[1];
 					this.out.println("LOGIN=200 OK");
 					this.out.flush();
 					return true;
