@@ -20,7 +20,6 @@ public class ChildThread extends Thread
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
-   // boolean isLogged= false;
    
     
     public ChildThread(Socket socket) throws IOException 
@@ -45,50 +44,50 @@ public class ChildThread extends Thread
 		{
 		    while ((line = in.readLine()) != null) 
 		    {	
-				if(line.equals("SHUTDOW")) {
-					this.out.println(line + "200 OK");
-					this.out.flush();
+		    	 	String[] parts = line.split(" ");
+		    	 	
+				if(parts[0].equals("SHUTDOWN")) {
+					
 					ChildThread handler;
-					for(int i = 0; i < handlers.size(); i++) 
+					
+					for(int i = 0; i < handlers.size();i++) 
 					{	
-						
 					    synchronized(handlers) 
 					    {
-						handler  = (ChildThread)handlers.elementAt(i);
+						handler = (ChildThread)handlers.elementAt(i);
 						if (handler != this) 
 						{
-						    handler.out.println(line + "210 the server is about to shutdown");
+						    handler.out.println(line+ "= 410 Server is about to shutdown");
 						    handler.out.flush();
+						    //socket.close();
+						    
 						}
 					    }
 					}
+					this.out.println(line+"=200 OK");
+					this.out.flush();
+					writeFile(contacts);
 					break;
 				}
-				else if (line.equals("SHUTDOWN")) {
-					break;
-				}
-				else if (line.substring(0, 3).equals("ADD")) 
-					add(line,contacts,isLogged);
-				else if (line.substring(0, 3).equals("WHO")) 
+				else if (parts[0].equals("ADD")) 
+					add(parts,contacts,isLogged);
+				else if (parts[0].equals("WHO")) 
 					who();
-				else  if (line.substring(0, 4).equals("LIST")) 
+				else  if (parts[0].equals("LIST")) 
 					list (contacts); 			
-				else if(line.substring(0, 4).equals("LOOK"))
+				else if(parts[0].equals("LOOK"))
 					look(line,contacts);
-				else if (line.substring(0, 4).equals("QUIT")) {
+				else if (parts[0].equals("LOGOUT")||parts[0].equals("QUIT")) {
 					if(isLogged)
 						isLogged=false;
 					this.out.println(line+"=200 OK");
-					this.out.flush();				
+					this.out.flush();	
 				}			
-				else if(line.substring(0, 5).equals("LOGIN"))
-				{
-					isLogged =login(line,isLogged, users);
-					System.out.println(isLogged); //tetsing only
-				}
-					
-				else if (line.substring(0, 6).equals("DELETE")) 
-					delete(contacts, line,isLogged);
+				else if(parts[0].equals("LOGIN"))
+					isLogged =login(line,isLogged, users);	
+
+				else if (parts[0].equals("DELETE")) 
+					delete(contacts, parts,isLogged);
 				else {
 					this.out.println("300 Invalid Command");
 					this.out.flush();
@@ -157,14 +156,14 @@ public class ChildThread extends Thread
 	    ons.close();
 	}
 	// ADD DONE
-	 void add(String line,ArrayList<ArrayList<String>> contacts,Boolean logged) {
+	 void add(String [] parts,ArrayList<ArrayList<String>> contacts,Boolean logged) {
 		 if(!logged)
 		 {
 			 this.out.println("401 You are not currently logged in, login first");
 			 this.out.flush();
 		 }
 		 else {
-			  String[] parts = line.split(" ");
+			  //String[] parts = line.split(" ");
 			  if(parts.length==4) {
 				  contacts.add(new ArrayList<String>());
 				  int spot=contacts.size()-1; 
@@ -202,14 +201,14 @@ public class ChildThread extends Thread
 		  }
 		} 
 	// DELETE DONE
-	 void delete(ArrayList<ArrayList<String>> contacts, String line,Boolean logged) {
+	 void delete(ArrayList<ArrayList<String>> contacts, String [] parts,Boolean logged) {
 		 if(!logged)
 		 {
 			 this.out.println("401 You are not currently logged in, login first");
 			 this.out.flush();
 		 }
 		 else {
-			 String[] parts = line.split(" "); 
+			// String[] parts = line.split(" "); 
 				Boolean found = false;
 				if (parts.length<2) {
 					this.out.println("301 Message Format Error");
@@ -225,7 +224,7 @@ public class ChildThread extends Thread
 						}
 					}
 					if (found) {
-						this.out.println("200 OK");
+						this.out.println("DELETE=200 OK");
 						this.out.flush();
 					}
 					else {
@@ -256,7 +255,7 @@ public class ChildThread extends Thread
 			for(i=0;i<users.size();i++){
 				if(users.get(i).get(0).equals(parts[1])&&users.get(i).get(1).equals(parts[2])){
 					isLogged=true;
-					this.out.println("200 OK");
+					this.out.println("LOGIN=200 OK");
 					this.out.flush();
 					return true;
 				}	
