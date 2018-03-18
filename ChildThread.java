@@ -1,10 +1,8 @@
 /* 
  * ChildThread.java
-
-
  */
 
-// Current Version
+
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -14,25 +12,24 @@ import java.util.Vector;
 public class ChildThread extends Thread 
 {
     static  Vector<ChildThread> handlers = new Vector<ChildThread>(20);
-    public static ArrayList<ArrayList<String>> contacts = new ArrayList<ArrayList<String>>(); // Holds Data from file
+    public static ArrayList<ArrayList<String>> contacts = new ArrayList<ArrayList<String>>(); 
 	public static ArrayList<ArrayList<String>> users = new ArrayList<ArrayList<String>>();
-	//public static String contact = "contacts.txt", user ="users.txt";
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
-    String userL="";
-    
+    public String userL="";
+    boolean isLogged= false;
+
     public ChildThread(Socket socket) throws IOException 
     {
-		this.socket = socket;
-		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
+    	this.socket = socket;
+    	in = new BufferedReader( new InputStreamReader(socket.getInputStream()));
+    	out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
     }
 
     public void run() 
     {
-    		boolean isLogged= false;
-    		
+    	
 		String line;
 		synchronized(handlers) 
 		{
@@ -43,62 +40,76 @@ public class ChildThread extends Thread
 		try 
 		{
 		    while ((line = in.readLine()) != null) 
-		    {	
-		    	 	String[] parts = line.split(" ");
-		    	 	
-				if(parts[0].equals("SHUTDOWN")) {
-					System.out.println(userL);
-					if(userL.equals("root")) {
-					ChildThread handler;
-					
-					for(int i = 0; i < handlers.size();i++) 
-					{	
-					    synchronized(handlers) 
-					    {
-						handler = (ChildThread)handlers.elementAt(i);
-						if (handler != this) 
-						{
-						    handler.out.println(line+ "= 410 Server is about to shutdown");
-						    handler.out.flush();
-						    //socket.close();
-						    
-						}
-					    }
-					}
-					this.out.println(line+"=200 OK");
-					this.out.flush();
-					writeFile(contacts);
-					break;
-					}
-					else {
-						this.out.println("402 User not allowed to execute command");
-						this.out.flush();
-					}
-				}
-				else if (parts[0].equals("ADD")) 
+		    {
+		    	System.out.println(line);
+		    	String[] parts = line.split(" ");
+		    	
+		    	 if (parts[0].equals("ADD")) 
 					add(parts,contacts,isLogged);
-				else if (parts[0].equals("WHO")) 
-					who();
-				else  if (parts[0].equals("LIST")) 
-					list (contacts); 			
-				else if(parts[0].equals("LOOK"))
-					look(line,contacts);
-				else if (parts[0].equals("LOGOUT")||parts[0].equals("QUIT")) {
+		    	 else if (parts[0].equals("DELETE")) 
+					delete(contacts, parts,isLogged);
+		    	 else if (parts[0].equals("LIST")) 
+					list (contacts);
+		    	 else if(parts[0].equals("LOGIN"))
+					isLogged =login(line,isLogged, users);	
+		    	 else if(parts[0].equals("LOOK"))
+					look(parts,contacts);
+		    	 else if(parts[0].equals("WHO"))
+						who();
+		    	 else if (parts[0].equals("LOGOUT")||parts[0].equals("QUIT")) {
 					if(isLogged)
 						isLogged=false;
+					userL="";
 					this.out.println(line+"=200 OK");
 					this.out.flush();	
-				}			
-				else if(parts[0].equals("LOGIN"))
-					isLogged =login(line,isLogged, users);	
-
-				else if (parts[0].equals("DELETE")) 
-					delete(contacts, parts,isLogged);
-				else {
-					this.out.println("300 Invalid Command");
-					this.out.flush();
+				 }	
+		    	 else if(parts[0].equals("SHUTDOWN")){
+		    		 System.out.println(userL);
+		    		 if(userL.equals("root")&&isLogged) {
+						ChildThread handler;
+						
+						for(int i = 0; i < handlers.size();i++) 
+						{	
+							synchronized(handlers) 
+						    {
+								handler = (ChildThread)handlers.elementAt(i);
+								if (handler != this) 
+								{
+								    handler.out.println(line+ "=210 Server is about to shutdown");
+								    handler.out.flush();
+								   
+								}
+						    }
+						}
+						this.out.println(line+"=200 OK");
+						this.out.flush();
+						writeFile(contacts);
+						System.exit(0);
+					 }
+					 else {
+						this.out.println("=402 User not allowed to execute command");
+						this.out.flush();
+					 }
+		    	 }
+		    	 else {
+						this.out.println("=300 Invalid Command");
+						this.out.flush();
+					}
+			
+		    // Broadcast it to everyone!  You will change this.  
+			// Most commands do not need to broadcast
+				for(int i = 0; i < handlers.size(); i++) 
+				{	
+				    synchronized(handlers) 
+				    {
+				    	ChildThread handler = (ChildThread)handlers.elementAt(i);
+						if (handler != this) 
+						{
+						    handler.out.println(line);
+						    handler.out.flush();
+						}
+				    }
 				}
-				
 		    }
 		} 
 		catch(IOException ioe) 
@@ -109,25 +120,22 @@ public class ChildThread extends Thread
 		{
 		    try 
 		    {
-				in.close();
-				out.close();
-				socket.close();
-				
+		    	in.close();
+		    	out.close();
+		    	socket.close();
 		    } 
 		    catch(IOException ioe) 
-		    {} 
+		    {}
 		    finally 
 		    {
-		    	
-		    		synchronized(handlers) 
-		    		{
-		    			handlers.removeElement(this);
-		    		}
+		    	synchronized(handlers) 
+		    	{
+		    		handlers.removeElement(this);
+		    	}
 		    }
 		}
-		System.exit(0);
     }
-       
+    
     // READ DONE
 	private static Scanner x;
 	static void readFile(ArrayList<ArrayList<String>> contacts,String file)
@@ -149,27 +157,28 @@ public class ChildThread extends Thread
 		}
 		x.close();
 	}
+    
 	//WRITE DONE
 	static void writeFile(ArrayList<ArrayList<String>> contacts) throws IOException {
-		PrintWriter ons = new PrintWriter("contacts.txt"); 
-	    
-	    for(int i=0;i<contacts.size();i++) {
-    		for(int j=0;j<contacts.get(i).size();j++){
-    			ons.write(contacts.get(i).get(j)+" ");
-    		}
-    		ons.write("\n");
-	    }
-	    ons.close();
-	}
-	// ADD DONE
-	 void add(String [] parts,ArrayList<ArrayList<String>> contacts,Boolean logged) {
+			PrintWriter ons = new PrintWriter("contacts.txt"); 
+		    
+		    for(int i=0;i<contacts.size();i++) {
+	    		for(int j=0;j<contacts.get(i).size();j++){
+	    			ons.write(contacts.get(i).get(j)+" ");
+	    		}
+	    		ons.write("\n");
+		    }
+		    ons.close();
+		}
+    
+    //ADD DONE
+    void add(String [] parts,ArrayList<ArrayList<String>> contacts,Boolean logged) {
 		 if(!logged)
 		 {
-			 this.out.println("401 You are not currently logged in, login first");
+			 this.out.println("ADD=401 You are not currently logged in, login first");
 			 this.out.flush();
 		 }
 		 else {
-			  //String[] parts = line.split(" ");
 			  if(parts.length==4) {
 				  contacts.add(new ArrayList<String>());
 				  int spot=contacts.size()-1; 
@@ -189,59 +198,60 @@ public class ChildThread extends Thread
 					  this.out.flush();
 				  }
 				  else {
-					  this.out.println("301 Message Format Error ");		
+					  this.out.println("ADD=301 Message Format Error ");		
 					  this.out.flush();
 					  contacts.remove(spot);
 					}
 				}
 			  else if(parts.length<4) {
-				  this.out.println("301 Message Format Error");
+				  this.out.println("ADD=301 Message Format Error");
 				  this.out.flush();
 			  }
 				
 			  else {
-				  this.out.println("Can not insert data, file is full");
+				  this.out.println("ADD=Can not insert data, file is full");
 				  this.out.flush();
 				  
 			  }
 		  }
 		} 
-	// DELETE DONE
-	 void delete(ArrayList<ArrayList<String>> contacts, String [] parts,Boolean logged) {
-		 if(!logged)
-		 {
-			 this.out.println("401 You are not currently logged in, login first");
-			 this.out.flush();
-		 }
-		 else {
-			// String[] parts = line.split(" "); 
-				Boolean found = false;
-				if (parts.length<2) {
-					this.out.println("301 Message Format Error");
-					this.out.flush(); 
-				}
-				else {
-					
-					for(int i=0;i<contacts.size();i++) {
-						if(contacts.get(i).get(0).equals(parts[1])) {
-							contacts.remove(i);
-							found =true;
-							break;
-						}
-					}
-					if (found) {
-						this.out.println("DELETE=200 OK");
-						this.out.flush();
-					}
-					else {
-						this.out.println("403 Record ID does not exist");
-						this.out.flush();
-					}
-				}
-		 }
-		
-	}
-	// LIST DONE
+    
+    //DELETE DONE
+ 	void delete(ArrayList<ArrayList<String>> contacts, String [] parts,Boolean logged) {
+ 		if(!logged)
+ 		 {
+ 			 this.out.println("DELETE=401 You are not currently logged in, login first");
+ 			 this.out.flush();
+ 		 }
+ 		 else {
+ 				Boolean found = false;
+ 				if (parts.length<2) {
+ 					this.out.println("DELETE=301 Message Format Error");
+ 					this.out.flush(); 
+ 				}
+ 				else {
+ 					
+ 					for(int i=0;i<contacts.size();i++) {
+ 						if(contacts.get(i).get(0).equals(parts[1])) {
+ 							contacts.remove(i);
+ 							found =true;
+ 							break;
+ 						}
+ 					}
+ 					if (found) {
+ 						this.out.println("DELETE=200 OK");
+ 						this.out.flush();
+ 					}
+ 					else {
+ 						this.out.println("DELETE=403 Record ID does not exist");
+ 						this.out.flush();
+ 					}
+ 				}
+ 		 }
+ 		
+ 	}
+
+ 	// LIST DONE
 	 void list(ArrayList<ArrayList<String>> contacts){	
 		String output="";
 		for(int i=0;i< contacts.size();i++) {
@@ -254,33 +264,35 @@ public class ChildThread extends Thread
 			this.out.println("LIST=200 OK=The List of records in the book="+output);
 			this.out.flush();
 	}
+
 	//LOGIN DONE
 	 Boolean login(String  line,Boolean isLogged,ArrayList<ArrayList<String>> users){	
 		 String[] parts = line.split(" ");
 		 int i;
-			for(i=0;i<users.size();i++){
-				if(users.get(i).get(0).equals(parts[1])&&users.get(i).get(1).equals(parts[2])){
-					isLogged=true;
-					userL+=parts[1];
-					this.out.println("LOGIN=200 OK");
-					this.out.flush();
-					return true;
-				}	
-			}
-			if(i==users.size())
-			{
-				this.out.println("410 Wong UserID or Password");
+		for(i=0;i<users.size();i++){
+			if(users.get(i).get(0).equals(parts[1])&&users.get(i).get(1).equals(parts[2])){
+				isLogged=true;
+				userL+=parts[1];
+				this.out.println("LOGIN=200 OK");
 				this.out.flush();
-				return false;
-			}
+				return true;
+			}	
+		}
+		if(i==users.size())
+		{
+			this.out.println("LOGIN=410 Wong UserID or Password");
+			this.out.flush();
 			return false;
 		}
+		return false;
+	}
+
 	 //LOOK DONE
-	 void look(String  line,ArrayList<ArrayList<String>> users){
-		 	String[] parts = line.split(" ");
+	 void look(String  [] parts,ArrayList<ArrayList<String>> users){
 	    	int index = Integer.parseInt(parts[1]); // 
-	    	ArrayList<String> looking= new ArrayList<String>();
+	    	//ArrayList<String> looking= new ArrayList<String>();
 	    	int i,usersFound=0;
+	    	String looking="LOOK=";
 	    	for(i=0;i<users.size();i++)
 	    	{
 	    		if(users.get(i).get(index).equals(parts[2])){
@@ -289,33 +301,42 @@ public class ChildThread extends Thread
 	    				foundUser+=users.get(i).get(j);
 	    				foundUser+=" ";
 	    			}
-	    			looking.add(foundUser);
+	    			looking+=foundUser;
+	    			looking+="=";
 	    			usersFound++;
 	    		}
 	    	}
 	    	if(usersFound==0){
-	    		this.out.println("404 Your search did not match any records");
+	    		this.out.println("LOOK=404 Your search did not match any records");
 	    		this.out.flush();
 	    	}
 	
 	    	else{
-	    		for(i =0;i<looking.size();i++)
-	    			this.out.println(looking.get(i) +" ");
+	    			this.out.println(looking);
 	    			this.out.flush();
 	    	}
     }
-    
-   
-	 static void who(){	
-			String output="";
-			for(int i=0;i< handlers.size();i++) {
-				for(int j=0;j<handlers.size();j++) {			
-					output+=handlers.get(i);
-					output+="\t";
-				}
-				output+="="; // inserted to split string on client side
-			}
-			System.out.println("LIST=200 OK=The List of active users: =");
-			//System.out.println(Vector<ChildThread> handlers);
-	}	 
+	 // WHO DONE
+	 void who() {
+		 ArrayList<String> whos= new ArrayList<String>();
+		 for(int i=0;i<handlers.size();i++)
+		 {
+			 String temp="";
+			 if(handlers.get(i).isLogged) {
+				 temp += handlers.get(i).userL+ " ";
+				 temp+=handlers.get(i).socket.getInetAddress();
+				 temp= temp.replace('/', ' ');
+				
+				 whos.add(temp);
+			 }
+			 
+		 }
+		 String send="WHO=";
+		 for(int i=0;i<whos.size();i++)
+			 send+=whos.get(i)+"=";
+		 this.out.println(send);
+		 this.out.flush();
+	 }
 }
+
+//Vector<ChildThread> handlers
