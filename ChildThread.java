@@ -65,7 +65,7 @@ public class ChildThread extends Thread
 				 }	
 		    	 else if(parts[0].equals("SHUTDOWN")){
 		    		 System.out.println(userL);
-		    		 if(userL.equals("root")&&isLogged) {
+		    		 if(userL.equals("root")&&isLogged==true) {
 						ChildThread handler;
 						
 						for(int i = 0; i < handlers.size();i++) 
@@ -94,7 +94,7 @@ public class ChildThread extends Thread
 		    	 else {
 						this.out.println("=300 Invalid Command");
 						this.out.flush();
-					}
+		    	 }
 			
 		    // Broadcast it to everyone!  You will change this.  
 			// Most commands do not need to broadcast
@@ -115,6 +115,11 @@ public class ChildThread extends Thread
 		catch(IOException ioe) 
 		{
 		    ioe.printStackTrace();
+		} 
+		catch(Exception ex) 
+		{
+		    ex.printStackTrace();
+		    
 		} 
 		finally 
 		{
@@ -225,7 +230,7 @@ public class ChildThread extends Thread
  		 }
  		 else {
  				Boolean found = false;
- 				if (parts.length<2) {
+ 				if (parts.length<2||parts.length>2) {
  					this.out.println("DELETE=301 Message Format Error");
  					this.out.flush(); 
  				}
@@ -292,7 +297,7 @@ public class ChildThread extends Thread
 	    	int index = Integer.parseInt(parts[1]); // 
 	    	//ArrayList<String> looking= new ArrayList<String>();
 	    	int i,usersFound=0;
-	    	String looking="LOOK=";
+	    	String looking="=";
 	    	for(i=0;i<users.size();i++)
 	    	{
 	    		if(users.get(i).get(index).equals(parts[2])){
@@ -312,7 +317,7 @@ public class ChildThread extends Thread
 	    	}
 	
 	    	else{
-	    			this.out.println(looking);
+	    			this.out.println("LOOK=Found "+usersFound+" Match"+looking);
 	    			this.out.flush();
 	    	}
     }
@@ -331,7 +336,7 @@ public class ChildThread extends Thread
 			 }
 			 
 		 }
-		 String send="WHO=";
+		 String send="WHO=The list of active users:=";
 		 for(int i=0;i<whos.size();i++)
 			 send+=whos.get(i)+"=";
 		 this.out.println(send);

@@ -55,6 +55,7 @@ public class Client
 			while ((userInput = stdInput.readLine())!= null)
 			{
 			    os.println(userInput);
+			    
 			}
 	
 			// close the input and output stream
@@ -83,7 +84,7 @@ class SThread extends Thread
      */
     SThread(Socket socket)
     {
-	this.socket = socket;
+    		this.socket = socket;
     }
 
     /*
@@ -91,27 +92,34 @@ class SThread extends Thread
      */
     public void run()
     {
-	try 
-	{
-	    is = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-	    while ((serverInput = is.readLine())!= null)
-	    {
-	    	//System.out.println("s:" + serverInput);
-	    	String[] parts = serverInput.split("=");
-    	
-    		for(int i=1;i<parts.length;i++)
-    			System.out.println(parts[i]);	    	
-    		if(parts[0].equals("QUIT")||parts[0].equals("SHUTDOWN"))
-    			break;
-	    }
-
-	    is.close();
-	    socket.close();   
-	    System.exit(0);
-	} 
-	catch (IOException e) 
-	{
-	}
+		try 
+		{
+		    is = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+	
+		    while ((serverInput = is.readLine())!= null)
+		    {
+		    	//System.out.println("s:" + serverInput);
+		    	String[] parts = serverInput.split("=");
+	    	
+	    		for(int i=1;i<parts.length;i++)
+	    			System.out.println(parts[i]);	    	
+	    		if(parts[0].equals("QUIT")||parts[0].equals("SHUTDOWN")) {
+	    			
+	    			if(parts[0].equals("QUIT"))
+	    				System.out.println("Quiting client");
+	    			break;
+	    		}
+	    			
+		    }
+	
+		    is.close();
+		    socket.close();   
+		    System.exit(0);
+		} 
+		catch (IOException e) 
+		{}
+		catch(Exception ex) {
+			System.out.println("connection reset");
+		}
     }           
 }
